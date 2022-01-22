@@ -13,9 +13,9 @@ from rest_framework import permissions
 from rest_framework_simplejwt.tokens import RefreshToken
 from users.serializers import UserSerializer
 from users.models import User
+from users.utils import EmailUtil
 from users.tokens import account_activation_token
 from app import settings
-from users.utils import EmailUtil
 
 class UserRegistryView(APIView):
     """
@@ -62,7 +62,7 @@ class UserRegistryView(APIView):
 
 class VerifyEmailView(APIView):
     def get(self, request):
-        
+
         token = request.GET.get('t')
         
         try:
