@@ -6,7 +6,7 @@ from rest_framework.decorators import api_view
 from rest_framework import status
 from api.serializers import UserSerializer
 
-class UserAPIView(APIView):
+class UserRegisterView(APIView):
     def post(self, request):
         try:
             serializer =  UserSerializer(data = request.data)

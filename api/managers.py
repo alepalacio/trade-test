@@ -3,11 +3,11 @@ from django.contrib.auth.base_user import BaseUserManager
 class UserManager(BaseUserManager):
     def create_user(self, username, email, password=None):
         if not username:
-            raise TypeError("Enter a valid username")
+            raise TypeError("Enter a valid username.")
         if not email:
             raise TypeError("Enter a valid email address.")
         if not password:
-            raise TypeError("Enter a valid password")
+            raise TypeError("Enter a valid password.")
 
         user = self.model(
             email=self.normalize_email(email),
@@ -19,11 +19,11 @@ class UserManager(BaseUserManager):
 
     def create_superuser(self, username, email, password=None):
         if not username:
-            raise TypeError("Enter a valid username")
+            raise TypeError("Enter a valid username.")
         if not email:
             raise TypeError("Enter a valid email address.")
         if not password:
-            raise TypeError("Enter a valid password")
+            raise TypeError("Enter a valid password.")
 
         user = self.model(
             email=self.normalize_email(email),
