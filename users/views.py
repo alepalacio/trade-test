@@ -39,6 +39,7 @@ class UserRegistryView(APIView):
             token = RefreshToken.for_user(user).access_token
 
             current_site = get_current_site(request).domain
+            print(current_site)
 
             relative_url = reverse('email-verification')
 
@@ -57,9 +58,10 @@ class UserRegistryView(APIView):
 
             EmailUtil.send_email(data)
 
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response('Account successfully created.', status=status.HTTP_201_CREATED)
         except:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class VerifyEmailView(APIView):
     def get(self, request):
@@ -74,8 +76,24 @@ class VerifyEmailView(APIView):
             if not user.is_verified:
                 user.is_verified=True
                 user.save()
-            return Response('Successfully activated account.', status=status.HTTP_200_OK)
+            return Response('Account succesfully activated.', status=status.HTTP_200_OK)
         except jwt.ExpiredSignatureError as identifier:
             return Response('Activation link expired.', status=status.HTTP_400_BAD_REQUEST)
         except jwt.exceptions.DecodeError as identifier:
             return Response('Invalid token.', status=status.HTTP_400_BAD_REQUEST)
+
+
+class LiveSearchUsernameAvailabilityView(APIView):
+    """
+    Shows all stored usernames in database.
+    """
+    def get(self, request):
+        
+        query = User.objects.all().values('username')
+        #print(query)
+        usernames = []
+        
+        for username in query:
+            usernames.append(username['username'])
+
+        return Response(usernames, status=status.HTTP_200_OK)
