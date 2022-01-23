@@ -14,7 +14,6 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from users.serializers import UserSerializer
 from users.models import User
 from users.utils import EmailUtil
-from users.tokens import account_activation_token
 from app import settings
 
 class UserRegistryView(APIView):
@@ -73,6 +72,8 @@ class VerifyEmailView(APIView):
             if not user.is_verified:
                 user.is_verified=True
                 user.save()
-            return Response('Succesfully activated account.', status=status.HTTP_200_OK)
+            return Response('Successfully activated account.', status=status.HTTP_200_OK)
         except jwt.ExpiredSignatureError as identifier:
             return Response('Activation link expired.', status=status.HTTP_400_BAD_REQUEST)
+        except jwt.exceptions.DecodeError as identifier:
+            return Response('Invalid token.', status=status.HTTP_400_BAD_REQUEST)
