@@ -41,10 +41,10 @@ class UserRegistryView(APIView):
             relative_url = reverse('email-verification')
 
             absolute_url = f"http://{current_site}{relative_url}?t={str(token)}"
-            print(absolute_url)
+            #print(absolute_url)
 
             email_body = f"Hi, {user.username}. Please use link below to verify your email account. \n\n{absolute_url}"
-            print(email_body)
+            #print(email_body)
 
             data = {
                 'subject':'Verify your email.',
