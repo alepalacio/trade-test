@@ -28,8 +28,10 @@ class UserRegistryView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
+        #print(request)
         try:
             serializer =  UserSerializer(data = request.data)
+            #print(serializer)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             user_data = serializer.data
@@ -55,7 +57,7 @@ class UserRegistryView(APIView):
 
             EmailUtil.send_email(data)
 
-            return Response('Ok',status=status.HTTP_201_CREATED)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         except:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
