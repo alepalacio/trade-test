@@ -1,3 +1,5 @@
+from ctypes.wintypes import BOOL
+from xmlrpc.client import Boolean
 import jwt
 from django.shortcuts import render
 from django.urls import reverse
@@ -85,15 +87,28 @@ class VerifyEmailView(APIView):
 
 class LiveSearchUsernameAvailabilityView(APIView):
     """
-    Shows all stored usernames in database.
+    Retrieves availability information about username input.  Input example:
+    {
+        "user_input":"myfirstusername"
+    }
     """
-    def get(self, request):
-        
-        query = User.objects.all().values('username')
-        #print(query)
-        usernames = []
-        
-        for username in query:
-            usernames.append(username['username'])
+    def post(self, request):
 
-        return Response(usernames, status=status.HTTP_200_OK)
+        user_input = request.data["user_input"]
+        query = User.objects.all().values('username')
+        
+        for username_data in query:
+            username = username_data['username']
+
+            if user_input == username:
+                data = {
+                    'detail':'Username unavailable. Try again.',
+                    'user_input':user_input
+                }
+                return Response(data, status.HTTP_200_OK)
+        
+        data = {
+            'detail':'Username available.',
+            'user_input':user_input
+        }
+        return Response(data, status=status.HTTP_200_OK)
