@@ -1,5 +1,3 @@
-from ctypes.wintypes import BOOL
-from xmlrpc.client import Boolean
 import jwt
 from django.shortcuts import render
 from django.urls import reverse
@@ -9,11 +7,12 @@ from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.core.mail import EmailMessage
 from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework import permissions
 from rest_framework_simplejwt.tokens import RefreshToken
-from users.serializers import UserSerializer
+from users.serializers import UserSerializer, LoginSerializer
 from users.models import User
 from users.utils import EmailUtil
 from app import settings
@@ -29,9 +28,18 @@ class UserRegistryView(APIView):
     """
     permission_classes = [permissions.AllowAny]
 
+    def check_api_key_client(self):
+        api_key = settings.API_CLIENT
+        front_api_key = self.request.META['HTTP_API_KEY']
+        print('HEADERS',front_api_key)
+
+        if api_key != front_api_key:
+            raise ValidationError('Missing or invalid API Key')
+
     def post(self, request):
-        #print(request)
+
         try:
+            self.check_api_key_client()
             serializer =  UserSerializer(data = request.data)
             #print(serializer)
             serializer.is_valid(raise_exception=True)
@@ -62,7 +70,7 @@ class UserRegistryView(APIView):
 
             return Response('Account successfully created.', status=status.HTTP_201_CREATED)
         except:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response('Bad request.', status=status.HTTP_400_BAD_REQUEST)
 
 
 class VerifyEmailView(APIView):
@@ -112,3 +120,18 @@ class LiveSearchUsernameAvailabilityView(APIView):
             'user_input':user_input
         }
         return Response(data, status=status.HTTP_200_OK)
+
+
+class UserLoginView(APIView):
+    """
+    User login.  Input example:
+    {
+        "username":"myusername",
+        "email": "myemail@email.com",
+        "password": "mysuperpassword"
+    }
+    """
+    def post(self, request):
+        serializer = LoginSerializer(data = request.data)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

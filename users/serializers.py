@@ -1,4 +1,6 @@
+from django.contrib import auth
 from rest_framework import serializers
+from rest_framework import exceptions
 from users.models import User
 
 class UserSerializer(serializers.ModelSerializer):
@@ -19,6 +21,46 @@ class UserSerializer(serializers.ModelSerializer):
         user.set_password(password)
         user.save()
         return user
+
+class LoginSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(max_length=100)
+    email = serializers.EmailField(max_length=100)
+    password = serializers.CharField(max_length=100, write_only=True)
+    tokens = serializers.CharField(max_length=100, read_only=True)
+
+    class Meta:
+        model = User
+        #fields = '__all__'
+        fields = [
+            'username',
+            'email',
+            'password',
+            'tokens',
+        ]
+
+    def validate(self, attrs):
+        username = attrs.get('username','')
+        email = attrs.get('email','')
+        password = attrs.get('password','')
+
+        user = auth.authenticate(username=username, email=email, password=password)
+
+        if not user:
+            raise exceptions.AuthenticationFailed('Invalid credentials. Try again.')
+
+        if not user.is_active:
+            raise exceptions.AuthenticationFailed('Account inactive.')
+
+        if not user.is_verified:
+            raise exceptions.AuthenticationFailed('Account not verified.')
+
+        return {
+            'username': user.username,
+            'email': user.email,
+            'tokens': user.tokens
+        }
+
+        #return super().validate(attrs)
 
 # class UserSerializer(serializers.Serializer):
 #     id = serializers.ReadOnlyField()
