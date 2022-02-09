@@ -1,13 +1,7 @@
 import jwt
-from django.shortcuts import render
 from django.urls import reverse
-from django.template.loader import render_to_string
 from django.contrib.sites.shortcuts import get_current_site
-from django.utils.encoding import force_bytes
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.core.mail import EmailMessage
 from rest_framework.response import Response
-from rest_framework.exceptions import ValidationError
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework import permissions
@@ -41,15 +35,12 @@ class UserRegistryView(APIView):
             token = RefreshToken.for_user(user).access_token
 
             current_site = get_current_site(request).domain
-            print(current_site)
 
             relative_url = reverse('email-verification')
 
             absolute_url = f"http://{current_site}{relative_url}?t={str(token)}"
-            #print(absolute_url)
 
             email_body = f"Hi, {user.username}. Please use link below to verify your email account. \n\n{absolute_url}"
-            #print(email_body)
 
             data = {
                 'subject':'Verify your email.',
@@ -68,14 +59,14 @@ class UserRegistryView(APIView):
 class VerifyEmailView(APIView):
 
     permission_classes = [permissions.AllowAny]
-    
+
     def get(self, request):
 
         token = request.GET.get('t')
         
         try:
             payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'],)
-            #print("PAYLOAD", payload)
+
             user = User.objects.get(id=payload['user_id'])
 
             if not user.is_verified:
