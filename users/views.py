@@ -12,6 +12,7 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework import permissions
 from rest_framework_simplejwt.tokens import RefreshToken
+from middlewares.api_keys import check_api_key_client
 from users.serializers import UserSerializer, LoginSerializer
 from users.models import User
 from users.utils import EmailUtil
@@ -27,21 +28,12 @@ class UserRegistryView(APIView):
     }
     """
     permission_classes = [permissions.AllowAny]
-
-    def check_api_key_client(self):
-        api_key = settings.API_CLIENT
-        front_api_key = self.request.META['HTTP_API_KEY']
-        print('HEADERS',front_api_key)
-
-        if api_key != front_api_key:
-            raise ValidationError('Missing or invalid API Key')
-
+        
     def post(self, request):
 
         try:
-            self.check_api_key_client()
+            check_api_key_client(self)
             serializer =  UserSerializer(data = request.data)
-            #print(serializer)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             user_data = serializer.data
@@ -74,6 +66,9 @@ class UserRegistryView(APIView):
 
 
 class VerifyEmailView(APIView):
+
+    permission_classes = [permissions.AllowAny]
+    
     def get(self, request):
 
         token = request.GET.get('t')
@@ -100,6 +95,8 @@ class LiveSearchUsernameAvailabilityView(APIView):
         "user_input":"myfirstusername"
     }
     """
+    permission_classes = [permissions.AllowAny]
+
     def post(self, request):
 
         user_input = request.data["user_input"]
@@ -127,11 +124,23 @@ class UserLoginView(APIView):
     User login.  Input example:
     {
         "username":"myusername",
-        "email": "myemail@email.com",
         "password": "mysuperpassword"
     }
     """
+    permission_classes = [permissions.AllowAny]
+    
     def post(self, request):
-        serializer = LoginSerializer(data = request.data)
-        serializer.is_valid(raise_exception=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        try:
+            check_api_key_client(self)
+            serializer = LoginSerializer(data = request.data)
+            serializer.is_valid(raise_exception=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except:
+            return Response('Bad request.', status=status.HTTP_400_BAD_REQUEST)
+
+class TestView(APIView):
+    permissions_classes = permissions.IsAuthenticated
+
+    def get(self, request):
+        print(request.user.id)
+        return Response('Hola')

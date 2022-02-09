@@ -6,12 +6,6 @@ from users.models import User
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        # fields = [
-        #     'id',
-        #     'username',
-        #     'email',
-        #     'password',
-        # ]
         fields = '__all__'
         extra_kwargs = {"password": {"write_only": True}}
 
@@ -23,65 +17,47 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
 class LoginSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(max_length=100)
-    email = serializers.EmailField(max_length=100)
+    username = serializers.CharField(max_length=100, write_only=True)
     password = serializers.CharField(max_length=100, write_only=True)
     tokens = serializers.CharField(max_length=100, read_only=True)
 
     class Meta:
         model = User
-        #fields = '__all__'
+
         fields = [
             'username',
-            'email',
             'password',
-            'tokens',
+            'tokens'
         ]
 
     def validate(self, attrs):
-        username = attrs.get('username','')
-        email = attrs.get('email','')
-        password = attrs.get('password','')
+        username = attrs.get('username')
+        password = attrs.get('password')
 
-        user = auth.authenticate(username=username, email=email, password=password)
+        if username and password:
 
-        if not user:
-            raise exceptions.AuthenticationFailed('Invalid credentials. Try again.')
+            user = auth.authenticate(username=username,password=password)
 
-        if not user.is_active:
-            raise exceptions.AuthenticationFailed('Account inactive.')
+            if not user:
+                msg = 'Unable to log in with provided credentials.'
+                raise serializers.ValidationError(msg)
 
-        if not user.is_verified:
-            raise exceptions.AuthenticationFailed('Account not verified.')
+            if not user.is_active:
+                msg = 'Account inactive.'
+                raise exceptions.ValidationError(msg)
 
-        return {
-            'username': user.username,
-            'email': user.email,
-            'tokens': user.tokens
-        }
+            if not user.is_verified:
+                msg = 'Account not verified.'
+                raise exceptions.ValidationError(msg)
 
-        #return super().validate(attrs)
+            tokens = user.tokens
 
-# class UserSerializer(serializers.Serializer):
-#     id = serializers.ReadOnlyField()
-#     username = serializers.CharField()
-#     email = serializers.EmailField()
-#     password = serializers.CharField()
-#     # first_name = serializers.CharField()
-#     # last_name = serializers.CharField()
+            user_tokens = {
+                'tokens':user.tokens
+            }
 
-#     def create(self, validated_data):
-#         instance = User()
-#         instance.username = validated_data.get('username')
-#         instance.email = validated_data.get('email')
-#         instance.password(validated_data.get('password'))
-#         instance.save()
-#         return instance
+            return user_tokens
 
-#     def validate_username(self, data):
-#         users = User.objects.filter(username = data)
-        
-#         if len(users) != 0:
-#             raise serializers.ValidationError('Username already exists, choose a new one.')
-#         else:
-#             return data
+        else:
+            msg = 'Must include "username" and "password".'
+            raise exceptions.ValidationError(msg)
