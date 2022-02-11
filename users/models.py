@@ -30,7 +30,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         raw_tokens = tokens.RefreshToken.for_user(self)
 
         user_tokens = {
-            'access_token':str(raw_tokens.access_token),
-            'refresh_token':str(raw_tokens),
+            'refresh':str(raw_tokens),
+            'access':str(raw_tokens.access_token),
         }
         return user_tokens
