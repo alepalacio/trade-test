@@ -28,8 +28,11 @@ class UserRegistryView(APIView):
 
         api_key = check_api_key_client(self)
 
-        if api_key:
-
+        if api_key.status_code == 401:
+            return Response('Missing API Key. Check API-KEY headers.', status=status.HTTP_401_UNAUTHORIZED)
+        elif api_key.status_code == 403:
+            return Response('Invalid API Key.', status=status.HTTP_403_FORBIDDEN)
+        elif api_key.status_code == 200:   
             try:
                 serializer =  UserSerializer(data = request.data)
                 serializer.is_valid(raise_exception=True)
