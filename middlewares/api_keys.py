@@ -8,6 +8,6 @@ def check_api_key_client(self):
     front_api_key = self.request.META['HTTP_API_KEY']
 
     if api_key != front_api_key:
-        raise exceptions.ValidationError('Missing or invalid API Key')
+        raise exceptions.ValidationError('Missing or invalid API Key.')
 
     return front_api_key
