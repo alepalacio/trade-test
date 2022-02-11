@@ -15,7 +15,7 @@ def check_api_key_client(self):
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         if api_key != front_api_key:
             return Response(status=status.HTTP_403_FORBIDDEN)
-        if front_api_key:
+        if front_api_key == api_key:
             return Response(status=status.HTTP_200_OK)
     except:
         return Response(status=status.HTTP_400_BAD_REQUEST)
