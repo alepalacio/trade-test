@@ -1,6 +1,7 @@
 from django.contrib import auth
 from rest_framework import serializers
 from rest_framework import exceptions
+from rest_framework_simplejwt import tokens
 from users.models import User
 
 class UserSerializer(serializers.ModelSerializer):
@@ -53,7 +54,7 @@ class LoginSerializer(serializers.ModelSerializer):
             tokens = user.tokens
 
             user_tokens = {
-                'tokens':user.tokens
+                'tokens':tokens
             }
 
             return user_tokens
@@ -61,3 +62,19 @@ class LoginSerializer(serializers.ModelSerializer):
         else:
             msg = 'Must include "username" and "password".'
             raise exceptions.ValidationError(msg)
+
+class LogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField()
+
+    def validate(self, attrs):
+        self.token = attrs['refresh']
+
+        return attrs
+    
+    def save(self, **kwargs):
+        
+        try:
+            blacklist_token = tokens.RefreshToken(self.token)
+            blacklist_token.blacklist()
+        except:
+            self.fail('bad_token')
