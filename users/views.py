@@ -25,7 +25,7 @@ class UserRegistryView(APIView):
     permission_classes = [permissions.AllowAny]
         
     def post(self, request):
-
+        
         api_key = check_api_key_client(self)
 
         if api_key.status_code == 401:
@@ -33,7 +33,7 @@ class UserRegistryView(APIView):
         elif api_key.status_code == 403:
             return Response('Invalid API Key.', status=status.HTTP_403_FORBIDDEN)
         elif api_key.status_code == 200:   
-            try:
+            #try:
                 serializer =  UserSerializer(data = request.data)
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
@@ -60,9 +60,8 @@ class UserRegistryView(APIView):
                 EmailUtil.send_email(data)
 
                 return Response('Account successfully created.', status=status.HTTP_201_CREATED)
-            except:
-                return Response('Bad request.', status=status.HTTP_400_BAD_REQUEST)
-
+        else:
+            return Response('Bad request.', status=status.HTTP_400_BAD_REQUEST)
 
 class VerifyEmailView(APIView):
 
